@@ -1,3 +1,5 @@
+import { applyRandomStereoPlacement } from './stereo';
+
 // Simulated gravitational-wave "chirps". The real leading-order (Newtonian
 // quadrupole) inspiral law is f(t) ∝ (t_c - t)^(-3/8): frequency stays
 // almost completely flat and then rockets up in the last instant before
@@ -141,7 +143,8 @@ export function playChirp(context: AudioContext, destination: AudioNode, preset:
 
   osc.connect(lowpass);
   harmonic.connect(harmonicGain).connect(lowpass);
-  lowpass.connect(envelope).connect(destination);
+  lowpass.connect(envelope);
+  const placement = applyRandomStereoPlacement(context, envelope, destination);
 
   const stopAt = mergerTime + ringDecay * 6 + 0.1;
   osc.start(now);
@@ -155,6 +158,7 @@ export function playChirp(context: AudioContext, destination: AudioNode, preset:
     harmonicGain.disconnect();
     lowpass.disconnect();
     envelope.disconnect();
+    placement.disconnect();
   };
 }
 

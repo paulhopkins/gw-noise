@@ -21,7 +21,8 @@ const playLabel: Element = playLabelEl;
 let engine: AudioEngine | null = null;
 let visualizer: Visualizer | null = null;
 let chirpScheduler: RandomScheduler | null = null;
-let glitchScheduler: RandomScheduler | null = null;
+let glitchSchedulerLeft: RandomScheduler | null = null;
+let glitchSchedulerRight: RandomScheduler | null = null;
 let playing = false;
 
 // Rate sliders are 0..1; map to a mean gap in seconds for the Poisson-like
@@ -48,9 +49,16 @@ async function ensureEngine(): Promise<AudioEngine> {
     () => playRandomChirp(created.context, created.layers.chirpBus),
   );
 
-  glitchScheduler = new RandomScheduler(
+  // Real detector glitches are per-instrument artifacts, uncorrelated
+  // between sites, so each side runs its own independent random stream
+  // rather than one glitch mirrored across channels.
+  glitchSchedulerLeft = new RandomScheduler(
     () => meanIntervalSeconds(glitchRate, 1, 120),
-    () => playRandomGlitch(created.context, created.layers.glitchBus),
+    () => playRandomGlitch(created.context, created.layers.glitchBus, -1),
+  );
+  glitchSchedulerRight = new RandomScheduler(
+    () => meanIntervalSeconds(glitchRate, 1, 120),
+    () => playRandomGlitch(created.context, created.layers.glitchBus, 1),
   );
 
   bindControls({
@@ -78,13 +86,15 @@ playButton.addEventListener('click', async () => {
     await active.resume();
     visualizer?.start();
     chirpScheduler?.start();
-    glitchScheduler?.start();
+    glitchSchedulerLeft?.start();
+    glitchSchedulerRight?.start();
     playing = true;
   } else {
     await active.suspend();
     visualizer?.stop();
     chirpScheduler?.stop();
-    glitchScheduler?.stop();
+    glitchSchedulerLeft?.stop();
+    glitchSchedulerRight?.stop();
     playing = false;
   }
 

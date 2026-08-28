@@ -3,6 +3,15 @@
 // Helix, Extremely Loud). These are invented/stylized sounds, not
 // reconstructions of real detector data — just capturing the flavor of
 // "something briefly odd happened in the instrument."
+//
+// Unlike a chirp (one real signal arriving at both detectors, just delayed),
+// glitches are per-instrument artifacts — cable issues, scattered light,
+// local environmental noise — genuinely uncorrelated between sites. So each
+// side gets its own independent glitch stream (see the two schedulers in
+// main.ts) rather than one glitch split across channels; playRandomGlitch
+// just commits its output to whichever side it was asked for.
+import { createSidePanner } from './stereo';
+
 type GlitchPlayer = (context: AudioContext, destination: AudioNode) => void;
 
 interface GlitchClass {
@@ -214,7 +223,9 @@ export const GLITCH_CLASSES: GlitchClass[] = [
   { name: 'Extremely Loud', play: playExtremelyLoud },
 ];
 
-export function playRandomGlitch(context: AudioContext, destination: AudioNode): void {
+export function playRandomGlitch(context: AudioContext, destination: AudioNode, side: -1 | 1): void {
   const glitchClass = GLITCH_CLASSES[Math.floor(Math.random() * GLITCH_CLASSES.length)];
-  glitchClass.play(context, destination);
+  const panner = createSidePanner(context, side);
+  panner.connect(destination);
+  glitchClass.play(context, panner);
 }

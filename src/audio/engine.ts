@@ -1,5 +1,6 @@
 import { createDetectorNoiseNode } from './detectorNoise';
 import { HumLayer } from './hum';
+import { applyRandomPan } from './stereo';
 
 export interface AudioLayers {
   noiseGain: GainNode;
@@ -44,10 +45,16 @@ export class AudioEngine {
     chirpBus.connect(masterGain);
     glitchBus.connect(masterGain);
 
+    // Fixed random pan per layer, chosen once, so the noise bed and hum feel
+    // like they're each coming from their own place rather than dead-center
+    // (a delay would do nothing audible for a signal that never starts or
+    // stops, so continuous layers just get a pan — see stereo.ts).
     const noiseNode = createDetectorNoiseNode(context);
-    noiseNode.connect(noiseGain);
+    applyRandomPan(context, noiseNode, noiseGain, 0.4);
 
-    const hum = new HumLayer(context, humGain);
+    const humRaw = context.createGain();
+    const hum = new HumLayer(context, humRaw);
+    applyRandomPan(context, humRaw, humGain, 0.35);
 
     return new AudioEngine(
       context,

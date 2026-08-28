@@ -1,0 +1,157 @@
+:root {
+  color-scheme: dark;
+  --bg: #06070d;
+  --bg-panel: #0d1020;
+  --fg: #e7e9f5;
+  --fg-dim: #8890b5;
+  --accent: #7fd9ff;
+  --accent-dim: #3d6b82;
+  --glitch: #ffb37f;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: radial-gradient(ellipse at 50% -10%, #131a33 0%, var(--bg) 60%);
+  color: var(--fg);
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.hero {
+  text-align: center;
+}
+
+.hero h1 {
+  margin: 0;
+  font-weight: 300;
+  font-size: 2.4rem;
+  letter-spacing: 0.08em;
+  color: var(--fg);
+}
+
+.tagline {
+  margin: 0.5rem 0 0;
+  color: var(--fg-dim);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+#visualizer {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  aspect-ratio: 900 / 220;
+  background: var(--bg-panel);
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(127, 217, 255, 0.08), 0 20px 60px -30px rgba(0, 0, 0, 0.8);
+}
+
+.play-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--accent-dim);
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 0.85rem 1.75rem;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+
+.play-button:hover {
+  border-color: var(--accent);
+  background: #10152c;
+}
+
+.play-button:active {
+  transform: scale(0.98);
+}
+
+.play-icon {
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.play-button[aria-pressed='true'] .play-icon {
+  background: var(--accent);
+  box-shadow: 0 0 12px 2px var(--accent);
+}
+
+.mixer {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem 2rem;
+  background: var(--bg-panel);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 0 0 1px rgba(127, 217, 255, 0.06);
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.control label,
+.group-label {
+  font-size: 0.82rem;
+  color: var(--fg-dim);
+  letter-spacing: 0.02em;
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+  background: transparent;
+}
+
+.radio-row {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.radio-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--fg);
+  font-size: 0.9rem;
+}
+
+.footer {
+  max-width: 560px;
+  text-align: center;
+  color: var(--fg-dim);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.footer a {
+  color: var(--accent-dim);
+}
+
+.footer a:hover {
+  color: var(--accent);
+}

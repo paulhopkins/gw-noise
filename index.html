@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="An ambient soundscape generator inspired by gravitational-wave detector noise: colored detector 'hiss', mains hum, occasional chirps and glitches."
+    />
+    <title>gw-noise — detector relaxation noise</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <div class="app">
+      <header class="hero">
+        <h1>gw&thinsp;∿&thinsp;noise</h1>
+        <p class="tagline">a gravitational-wave detector, humming quietly in the dark</p>
+      </header>
+
+      <canvas id="visualizer" width="900" height="220" aria-hidden="true"></canvas>
+
+      <button id="playButton" class="play-button" type="button" aria-pressed="false">
+        <span class="play-icon" aria-hidden="true"></span>
+        <span class="play-label">Listen</span>
+      </button>
+
+      <section class="mixer" aria-label="Sound layer mixer">
+        <div class="control">
+          <label for="masterVolume">Master volume</label>
+          <input id="masterVolume" type="range" min="0" max="100" value="70" />
+        </div>
+
+        <div class="control">
+          <label for="noiseLevel">Detector noise</label>
+          <input id="noiseLevel" type="range" min="0" max="100" value="70" />
+        </div>
+
+        <div class="control">
+          <label for="humLevel">Mains hum</label>
+          <input id="humLevel" type="range" min="0" max="100" value="25" />
+        </div>
+
+        <div class="control hum-freq">
+          <span class="group-label">Mains frequency</span>
+          <div class="radio-row">
+            <label><input type="radio" name="humFreq" value="60" checked /> 60&nbsp;Hz</label>
+            <label><input type="radio" name="humFreq" value="50" /> 50&nbsp;Hz</label>
+          </div>
+        </div>
+
+        <div class="control">
+          <label for="chirpLevel">Chirps volume</label>
+          <input id="chirpLevel" type="range" min="0" max="100" value="60" />
+        </div>
+
+        <div class="control">
+          <label for="chirpRate">Chirps frequency</label>
+          <input id="chirpRate" type="range" min="0" max="100" value="35" />
+        </div>
+
+        <div class="control">
+          <label for="glitchLevel">Glitches volume</label>
+          <input id="glitchLevel" type="range" min="0" max="100" value="55" />
+        </div>
+
+        <div class="control">
+          <label for="glitchRate">Glitches frequency</label>
+          <input id="glitchRate" type="range" min="0" max="100" value="20" />
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          An artistic soundscape shaped by real detector noise characteristics
+          (seismic wall, shot-noise rise, mains hum) and playful takes on
+          <a href="https://www.zooniverse.org/projects/zooniverse/gravity-spy" target="_blank" rel="noopener noreferrer">Gravity&nbsp;Spy</a>
+          glitch classes like Blip, Koi Fish and Whistle — not real strain data.
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

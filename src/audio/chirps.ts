@@ -118,8 +118,14 @@ function sweepOscillator(
 export function playChirp(context: AudioContext, destination: AudioNode, preset: ChirpPreset): void {
   const now = context.currentTime + SCHEDULE_LOOKAHEAD;
   const curves = buildInspiralCurves(preset.freqStart, preset.freqEnd, preset.duration, preset.shape);
-  const ringFreq = preset.freqEnd * 1.3;
-  const ringDecay = 0.05 + preset.duration * 0.01;
+  // A real ringdown's quasi-normal-mode frequency sits close to the late
+  // inspiral frequency, not dramatically above it. The original 1.3x jump
+  // read as "still climbing" rather than "peaked and now decaying" -- a
+  // small step reads as a peak, and the decay (stretched out a bit so it's
+  // actually visible as a fading tail rather than an instant cutoff) is
+  // what makes it look/sound like a ring rather than an abrupt stop.
+  const ringFreq = preset.freqEnd * 1.08;
+  const ringDecay = 0.09 + preset.duration * 0.02;
   const mergerTime = now + preset.duration;
 
   const osc = sweepOscillator(context, now, curves, preset.duration, ringFreq, 1);

@@ -1,6 +1,6 @@
 import './style.css';
 import { AudioEngine } from './audio/engine';
-import { Visualizer } from './audio/visualizer';
+import { Visualizer, VisualizerMode } from './audio/visualizer';
 import { RandomScheduler } from './audio/scheduler';
 import { playRandomChirp } from './audio/chirps';
 import { playRandomGlitch } from './audio/glitches';
@@ -9,17 +9,25 @@ import { bindControls } from './ui/controls';
 const playButtonEl = document.getElementById('playButton');
 const canvasEl = document.getElementById('visualizer');
 const playLabelEl = playButtonEl?.querySelector('.play-label');
+const visualizerModeButtonEl = document.getElementById('visualizerModeButton');
 
-if (!(playButtonEl instanceof HTMLButtonElement) || !(canvasEl instanceof HTMLCanvasElement) || !playLabelEl) {
+if (
+  !(playButtonEl instanceof HTMLButtonElement) ||
+  !(canvasEl instanceof HTMLCanvasElement) ||
+  !playLabelEl ||
+  !(visualizerModeButtonEl instanceof HTMLButtonElement)
+) {
   throw new Error('Expected page elements are missing');
 }
 
 const playButton: HTMLButtonElement = playButtonEl;
 const canvas: HTMLCanvasElement = canvasEl;
 const playLabel: Element = playLabelEl;
+const visualizerModeButton: HTMLButtonElement = visualizerModeButtonEl;
 
 let engine: AudioEngine | null = null;
 let visualizer: Visualizer | null = null;
+let visualizerMode: VisualizerMode = 'waveform';
 let chirpScheduler: RandomScheduler | null = null;
 let glitchSchedulerLeft: RandomScheduler | null = null;
 let glitchSchedulerRight: RandomScheduler | null = null;
@@ -40,6 +48,7 @@ async function ensureEngine(): Promise<AudioEngine> {
   const created = await AudioEngine.create();
   engine = created;
   visualizer = new Visualizer(canvas, created.layers.analyser);
+  visualizer.setMode(visualizerMode);
 
   // Floors are pushed low on purpose: cranking a rate slider all the way up
   // should tip over from "occasional" into "clearly too much" so the extremes
@@ -100,4 +109,10 @@ playButton.addEventListener('click', async () => {
 
   playButton.setAttribute('aria-pressed', String(playing));
   playLabel.textContent = playing ? 'Pause' : 'Listen';
+});
+
+visualizerModeButton.addEventListener('click', () => {
+  visualizerMode = visualizerMode === 'waveform' ? 'spectrogram' : 'waveform';
+  visualizerModeButton.textContent = visualizerMode === 'waveform' ? 'Spectrogram view' : 'Waveform view';
+  visualizer?.setMode(visualizerMode);
 });

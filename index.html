@@ -17,7 +17,10 @@
         <p class="tagline">a gravitational-wave detector, humming quietly in the dark</p>
       </header>
 
-      <canvas id="visualizer" width="900" height="220" aria-hidden="true"></canvas>
+      <div class="visualizer-wrap">
+        <canvas id="visualizer" width="900" height="220" aria-hidden="true"></canvas>
+        <button id="visualizerModeButton" class="mode-toggle" type="button">Spectrogram view</button>
+      </div>
 
       <button id="playButton" class="play-button" type="button" aria-pressed="false">
         <span class="play-icon" aria-hidden="true"></span>

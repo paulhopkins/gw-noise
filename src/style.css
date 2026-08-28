@@ -61,6 +61,32 @@ body {
   box-shadow: 0 0 0 1px rgba(127, 217, 255, 0.08), 0 20px 60px -30px rgba(0, 0, 0, 0.8);
 }
 
+.visualizer-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+}
+
+.mode-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(13, 16, 32, 0.75);
+  border: 1px solid var(--accent-dim);
+  color: var(--fg-dim);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.mode-toggle:hover {
+  color: var(--fg);
+  border-color: var(--accent);
+}
+
 .play-button {
   display: flex;
   align-items: center;

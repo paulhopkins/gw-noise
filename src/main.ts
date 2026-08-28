@@ -40,13 +40,16 @@ async function ensureEngine(): Promise<AudioEngine> {
   engine = created;
   visualizer = new Visualizer(canvas, created.layers.analyser);
 
+  // Floors are pushed low on purpose: cranking a rate slider all the way up
+  // should tip over from "occasional" into "clearly too much" so the extremes
+  // of the control are obvious.
   chirpScheduler = new RandomScheduler(
-    () => meanIntervalSeconds(chirpRate, 5, 90),
+    () => meanIntervalSeconds(chirpRate, 1.5, 90),
     () => playRandomChirp(created.context, created.layers.chirpBus),
   );
 
   glitchScheduler = new RandomScheduler(
-    () => meanIntervalSeconds(glitchRate, 5, 120),
+    () => meanIntervalSeconds(glitchRate, 1, 120),
     () => playRandomGlitch(created.context, created.layers.glitchBus),
   );
 

@@ -1,35 +1,50 @@
-// Simulated gravitational-wave "chirps", shaped after the leading-order
-// (Newtonian quadrupole) inspiral formula rather than a generic sweep:
+// Simulated gravitational-wave "chirps". The real leading-order (Newtonian
+// quadrupole) inspiral law is f(t) ∝ (t_c - t)^(-3/8): frequency stays
+// almost completely flat and then rockets up in the last instant before
+// merger. Applied literally over a multi-second preset, that puts ~90% of
+// the audible sweep in the final ~5-10% of the duration regardless of how
+// long the preset nominally is — every chirp ends up sounding like a faint
+// drone followed by a short, weird blip, which is also why real merger
+// "chirp" audio clips (e.g. GW150914's) are famously well under a second.
 //
-//   f(t)   ∝ (t_c - t)^(-3/8)   — frequency stays nearly flat, then
-//                                  accelerates sharply as the merger time
-//                                  t_c is approached
-//   h(t)   ∝ f(t)^(2/3)         — amplitude rises together with frequency,
-//                                  so the loudest, highest part of the sweep
-//                                  arrives right at the end
+// To get a genuinely long, audible build for the slow presets while keeping
+// the short ones sharp, frequency is instead driven by a tunable power-law
+// progress curve, f(s) = freqStart * (freqEnd/freqStart)^(s^shape), where
+// s = t/duration. shape = 1 would be a plain exponential sweep; shape > 1
+// keeps the same qualitative character as the real law — monotonic,
+// accelerating, not a smooth symmetric sweep — but lets each preset control
+// how much of its curve is spread across the visible duration vs.
+// concentrated at the end.
+//
+//   h(t) ∝ f(t)^(2/3)   — amplitude still rises together with frequency, so
+//                          the loudest, highest part of the sweep arrives
+//                          right at the end
 //
 // followed by a short ringdown: a fast-decaying tone a bit above the final
 // inspiral frequency, standing in for the merged black hole's quasi-normal
-// mode. That combination — slow build, sharp accelerating finish, abrupt
-// ringing cutoff — is what makes a real chirp sound distinct rather than a
-// smooth up-and-down sweep.
+// mode. That combination — build, sharp accelerating finish, abrupt ringing
+// cutoff — is what makes a chirp sound distinct rather than a smooth
+// up-and-down sweep.
 //
 // Physically, longer chirps come from lower-mass (lower chirp-mass) systems,
 // which spend longer sweeping through the audible band; short/fast ones
-// come from higher-mass black hole mergers. Presets below follow that
-// scaling.
+// come from higher-mass black hole mergers, whose final plunge is far more
+// abrupt. Presets follow that scaling — shape increases as duration drops,
+// so short-fast stays properly percussive while long-slow actually sounds
+// long.
 export interface ChirpPreset {
   name: string;
   duration: number;
   freqStart: number;
   freqEnd: number;
+  shape: number;
 }
 
 export const CHIRP_PRESETS: ChirpPreset[] = [
-  { name: 'long-slow', duration: 12, freqStart: 25, freqEnd: 260 },
-  { name: 'medium-slow', duration: 6, freqStart: 32, freqEnd: 320 },
-  { name: 'medium-fast', duration: 2.5, freqStart: 45, freqEnd: 420 },
-  { name: 'short-fast', duration: 1.4, freqStart: 60, freqEnd: 520 },
+  { name: 'long-slow', duration: 12, freqStart: 25, freqEnd: 260, shape: 2.2 },
+  { name: 'medium-slow', duration: 6, freqStart: 32, freqEnd: 320, shape: 2.6 },
+  { name: 'medium-fast', duration: 2.5, freqStart: 45, freqEnd: 420, shape: 3.2 },
+  { name: 'short-fast', duration: 1.4, freqStart: 60, freqEnd: 520, shape: 4 },
 ];
 
 interface InspiralCurves {
@@ -47,20 +62,18 @@ interface InspiralCurves {
 const SCHEDULE_LOOKAHEAD = 0.03;
 const RING_MARGIN = 0.02;
 
-function buildInspiralCurves(freqStart: number, freqEnd: number, duration: number): InspiralCurves {
+function buildInspiralCurves(freqStart: number, freqEnd: number, duration: number, shape: number): InspiralCurves {
   const ratio = freqEnd / freqStart;
-  // Merger time t_c such that f(0) = freqStart and f(duration) = freqEnd
-  // under f(t) = freqStart * (1 - t/t_c)^(-3/8).
-  const mergerTime = duration / (1 - Math.pow(ratio, -8 / 3));
-
   const sampleCount = Math.min(600, Math.max(64, Math.round(duration * 50)));
   const freq = new Float32Array(sampleCount);
   const amp = new Float32Array(sampleCount);
   const fadeInFraction = 0.05;
 
   for (let i = 0; i < sampleCount; i++) {
-    const t = (i / (sampleCount - 1)) * duration;
-    const f = freqStart * Math.pow(1 - t / mergerTime, -3 / 8);
+    const s = i / (sampleCount - 1);
+    const t = s * duration;
+    const progress = Math.pow(s, shape);
+    const f = freqStart * Math.pow(ratio, progress);
     freq[i] = f;
 
     // Smooth 0->1 fade over the first slice of the sweep so the oscillator
@@ -97,7 +110,7 @@ function sweepOscillator(
 
 export function playChirp(context: AudioContext, destination: AudioNode, preset: ChirpPreset): void {
   const now = context.currentTime + SCHEDULE_LOOKAHEAD;
-  const curves = buildInspiralCurves(preset.freqStart, preset.freqEnd, preset.duration);
+  const curves = buildInspiralCurves(preset.freqStart, preset.freqEnd, preset.duration, preset.shape);
   const ringFreq = preset.freqEnd * 1.3;
   const ringDecay = 0.05 + preset.duration * 0.01;
   const mergerTime = now + preset.duration;

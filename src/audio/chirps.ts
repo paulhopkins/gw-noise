@@ -66,7 +66,12 @@ const RING_MARGIN = 0.02;
 
 function buildInspiralCurves(freqStart: number, freqEnd: number, duration: number, shape: number): InspiralCurves {
   const ratio = freqEnd / freqStart;
-  const sampleCount = Math.min(600, Math.max(64, Math.round(duration * 50)));
+  // The sweep accelerates hardest right at the end, where consecutive
+  // curve points are linearly interpolated by the AudioParam — too few
+  // points there makes the pitch glide in audible discrete steps (a
+  // chiptune-ish "staircase" instead of a smooth sweep). 500 points/sec
+  // keeps even the steepest part well under a perceptible step size.
+  const sampleCount = Math.min(3000, Math.max(200, Math.round(duration * 500)));
   const freq = new Float32Array(sampleCount);
   const amp = new Float32Array(sampleCount);
   const fadeInFraction = 0.05;

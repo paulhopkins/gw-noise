@@ -41,12 +41,12 @@ async function ensureEngine(): Promise<AudioEngine> {
   visualizer = new Visualizer(canvas, created.layers.analyser);
 
   chirpScheduler = new RandomScheduler(
-    () => meanIntervalSeconds(chirpRate, 8, 180),
+    () => meanIntervalSeconds(chirpRate, 5, 90),
     () => playRandomChirp(created.context, created.layers.chirpBus),
   );
 
   glitchScheduler = new RandomScheduler(
-    () => meanIntervalSeconds(glitchRate, 5, 240),
+    () => meanIntervalSeconds(glitchRate, 5, 120),
     () => playRandomGlitch(created.context, created.layers.glitchBus),
   );
 

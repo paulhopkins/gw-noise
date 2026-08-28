@@ -7,10 +7,16 @@ interface Harmonic {
   gain: number;
 }
 
+// A pure 60Hz fundamental sits at or below what a lot of small speakers can
+// reproduce, so the audible character of "mains hum" has to come mostly from
+// its upper harmonics (which real transformer/rectifier hum has plenty of
+// anyway) rather than relying on bass response.
 const HARMONICS: Harmonic[] = [
-  { multiple: 1, gain: 1.0 },
-  { multiple: 2, gain: 0.35 },
-  { multiple: 3, gain: 0.15 },
+  { multiple: 1, gain: 0.7 },
+  { multiple: 2, gain: 0.5 },
+  { multiple: 3, gain: 0.4 },
+  { multiple: 4, gain: 0.22 },
+  { multiple: 5, gain: 0.16 },
 ];
 
 export class HumLayer {

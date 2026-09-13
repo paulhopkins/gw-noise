@@ -1,6 +1,7 @@
 export interface KeyboardCallbacks {
   onTogglePlay: () => void;
   onToggleVisualizer: () => void;
+  onToggleEventLabels: () => void;
   onVolumeStep: (deltaPercent: number) => void;
 }
 
@@ -26,6 +27,9 @@ export function bindKeyboardShortcuts(callbacks: KeyboardCallbacks): void {
         break;
       case 'KeyV':
         callbacks.onToggleVisualizer();
+        break;
+      case 'KeyL':
+        callbacks.onToggleEventLabels();
         break;
       case 'ArrowUp':
         event.preventDefault();

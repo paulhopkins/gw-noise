@@ -9,6 +9,7 @@ export interface AudioLayers {
   glitchBus: GainNode;
   masterGain: GainNode;
   analyser: AnalyserNode;
+  spectrogramAnalyser: AnalyserNode;
 }
 
 export class AudioEngine {
@@ -30,6 +31,25 @@ export class AudioEngine {
 
     masterGain.connect(analyser);
     analyser.connect(context.destination);
+
+    // A second, higher-resolution tap used only for the spectrogram's
+    // frequency data. Mains hum's harmonics sit only 50/60 Hz apart, and an
+    // AnalyserNode's window smears each tone's energy across several bins on
+    // either side of it (its mainlobe is roughly 6 bins wide) -- at the
+    // primary analyser's 2048-point FFT, that smear is wider than the gap
+    // between harmonics, so they visually merge into one thick blob no
+    // matter how the frequency-to-pixel mapping is done. A big enough FFT
+    // narrows that smear back below the harmonic spacing, but the resulting
+    // ~170ms analysis window is too sluggish for the default oscilloscope
+    // trace (each animation frame would mostly repeat the last one's audio),
+    // so it's kept on its own analyser rather than raising the primary one.
+    // Muted out of the actual output -- it exists purely to be read from.
+    const spectrogramAnalyser = context.createAnalyser();
+    spectrogramAnalyser.fftSize = 8192;
+    spectrogramAnalyser.smoothingTimeConstant = 0.5;
+    const spectrogramTapMute = context.createGain();
+    spectrogramTapMute.gain.value = 0;
+    masterGain.connect(spectrogramAnalyser).connect(spectrogramTapMute).connect(context.destination);
 
     const noiseGain = context.createGain();
     noiseGain.gain.value = 0.7;
@@ -58,7 +78,7 @@ export class AudioEngine {
 
     return new AudioEngine(
       context,
-      { noiseGain, humGain, chirpBus, glitchBus, masterGain, analyser },
+      { noiseGain, humGain, chirpBus, glitchBus, masterGain, analyser, spectrogramAnalyser },
       hum,
     );
   }

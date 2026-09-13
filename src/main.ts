@@ -14,6 +14,7 @@ const playLabelEl = playButtonEl?.querySelector('.play-label');
 const visualizerModeButtonEl = document.getElementById('visualizerModeButton');
 const eventLogEl = document.getElementById('eventLog');
 const masterVolumeEl = document.getElementById('masterVolume');
+const eventLabelsToggleEl = document.getElementById('eventLabels');
 
 if (
   !(playButtonEl instanceof HTMLButtonElement) ||
@@ -21,7 +22,8 @@ if (
   !playLabelEl ||
   !(visualizerModeButtonEl instanceof HTMLButtonElement) ||
   !(eventLogEl instanceof HTMLElement) ||
-  !(masterVolumeEl instanceof HTMLInputElement)
+  !(masterVolumeEl instanceof HTMLInputElement) ||
+  !(eventLabelsToggleEl instanceof HTMLInputElement)
 ) {
   throw new Error('Expected page elements are missing');
 }
@@ -31,6 +33,7 @@ const canvas: HTMLCanvasElement = canvasEl;
 const playLabel: Element = playLabelEl;
 const visualizerModeButton: HTMLButtonElement = visualizerModeButtonEl;
 const masterVolume: HTMLInputElement = masterVolumeEl;
+const eventLabelsToggle: HTMLInputElement = eventLabelsToggleEl;
 const eventLog = new EventLog(eventLogEl);
 
 let engine: AudioEngine | null = null;
@@ -59,7 +62,7 @@ async function ensureEngine(): Promise<AudioEngine> {
 
   const created = await AudioEngine.create();
   engine = created;
-  visualizer = new Visualizer(canvas, created.layers.analyser);
+  visualizer = new Visualizer(canvas, created.layers.analyser, created.layers.spectrogramAnalyser);
   visualizer.setMode(visualizerMode);
 
   // Floors are pushed low on purpose: cranking a rate slider all the way up
@@ -151,6 +154,7 @@ bindKeyboardShortcuts({
   // duplicated here, so there's one source of truth for what "toggle" does.
   onTogglePlay: () => playButton.click(),
   onToggleVisualizer: () => visualizerModeButton.click(),
+  onToggleEventLabels: () => eventLabelsToggle.click(),
   onVolumeStep: (deltaPercent) => {
     const next = Math.min(100, Math.max(0, Number(masterVolume.value) + deltaPercent));
     masterVolume.value = String(next);

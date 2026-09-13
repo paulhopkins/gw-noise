@@ -39,7 +39,8 @@ export class Visualizer {
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
-    private readonly analyser: AnalyserNode,
+    private readonly waveformAnalyser: AnalyserNode,
+    private readonly spectrogramAnalyser: AnalyserNode,
   ) {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('2D canvas context unavailable');
@@ -53,12 +54,8 @@ export class Visualizer {
     canvas.height = Math.round(this.cssHeight * this.dpr);
     ctx.scale(this.dpr, this.dpr);
 
-    this.analyser.fftSize = 2048;
-    // Lower than the 0.8 default so the spectrogram shows crisp diagonal
-    // chirp sweeps instead of a smeared trail.
-    this.analyser.smoothingTimeConstant = 0.5;
-    this.timeData = new Uint8Array(new ArrayBuffer(this.analyser.frequencyBinCount));
-    this.freqData = new Uint8Array(new ArrayBuffer(this.analyser.frequencyBinCount));
+    this.timeData = new Uint8Array(new ArrayBuffer(this.waveformAnalyser.frequencyBinCount));
+    this.freqData = new Uint8Array(new ArrayBuffer(this.spectrogramAnalyser.frequencyBinCount));
 
     this.paintBackground(1);
   }
@@ -103,7 +100,7 @@ export class Visualizer {
   }
 
   private renderWaveform(): void {
-    this.analyser.getByteTimeDomainData(this.timeData);
+    this.waveformAnalyser.getByteTimeDomainData(this.timeData);
     this.paintBackground(0.35);
 
     this.ctx.lineWidth = 2;
@@ -134,9 +131,9 @@ export class Visualizer {
     this.ctx.drawImage(this.canvas, colW, 0, devW - colW, devH, 0, 0, devW - colW, devH);
     this.ctx.restore();
 
-    this.analyser.getByteFrequencyData(this.freqData);
-    const sampleRate = this.analyser.context.sampleRate;
-    const binHz = sampleRate / this.analyser.fftSize;
+    this.spectrogramAnalyser.getByteFrequencyData(this.freqData);
+    const sampleRate = this.spectrogramAnalyser.context.sampleRate;
+    const binHz = sampleRate / this.spectrogramAnalyser.fftSize;
     const maxFreq = Math.min(MAX_DISPLAY_FREQ, sampleRate / 2);
 
     const column = this.ctx.createImageData(colW, devH);
@@ -144,8 +141,20 @@ export class Visualizer {
       // row 0 = top = highest displayed frequency, log-spaced downward.
       const t = row / (devH - 1);
       const freq = maxFreq * Math.pow(MIN_DISPLAY_FREQ / maxFreq, t);
-      const bin = Math.min(this.freqData.length - 1, Math.round(freq / binHz));
-      const [r, g, b] = magnitudeToRgb(this.freqData[bin]);
+
+      // Low frequencies (mains hum and its harmonics) sit where the log axis
+      // packs many rows into one bin's worth of Hz -- rounding to the
+      // nearest bin would repeat that bin's exact value across all of those
+      // rows, rendering a flat, blocky band instead of a peak. Interpolating
+      // between the two surrounding bins gives every row its own value along
+      // that bin's rolloff, so the same peak reads as a narrower, tapered
+      // line instead of a thick solid one.
+      const exactBin = Math.min(this.freqData.length - 1, freq / binHz);
+      const lowerBin = Math.floor(exactBin);
+      const upperBin = Math.min(this.freqData.length - 1, lowerBin + 1);
+      const frac = exactBin - lowerBin;
+      const magnitude = this.freqData[lowerBin] + (this.freqData[upperBin] - this.freqData[lowerBin]) * frac;
+      const [r, g, b] = magnitudeToRgb(magnitude);
       for (let c = 0; c < colW; c++) {
         const idx = (row * colW + c) * 4;
         column.data[idx] = r;

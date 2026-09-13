@@ -116,18 +116,14 @@ function sweepOscillator(
   curves: InspiralCurves,
   duration: number,
   ringFreq: number,
-  freqMultiplier: number,
 ): OscillatorNode {
   const osc = context.createOscillator();
   osc.type = 'sine';
-
-  const scaledFreq =
-    freqMultiplier === 1 ? curves.freq : curves.freq.map((f) => f * freqMultiplier);
-  osc.frequency.setValueCurveAtTime(scaledFreq, now, duration);
+  osc.frequency.setValueCurveAtTime(curves.freq, now, duration);
 
   const ringStart = now + duration + RING_MARGIN;
-  osc.frequency.setValueAtTime(scaledFreq[scaledFreq.length - 1], ringStart);
-  osc.frequency.exponentialRampToValueAtTime(ringFreq * freqMultiplier, ringStart + 0.025);
+  osc.frequency.setValueAtTime(curves.freq[curves.freq.length - 1], ringStart);
+  osc.frequency.exponentialRampToValueAtTime(ringFreq, ringStart + 0.025);
 
   return osc;
 }
@@ -145,23 +141,16 @@ export function playChirp(context: AudioContext, destination: AudioNode, preset:
   const ringDecay = 0.09 + preset.duration * 0.02;
   const mergerTime = now + preset.duration;
 
-  const osc = sweepOscillator(context, now, curves, preset.duration, ringFreq, 1);
-  const harmonic = sweepOscillator(context, now, curves, preset.duration, ringFreq, 2);
-  const harmonicGain = context.createGain();
-  const harmonicLevel = 0.18;
-  harmonicGain.gain.value = harmonicLevel;
+  const osc = sweepOscillator(context, now, curves, preset.duration, ringFreq);
 
   const lowpass = context.createBiquadFilter();
   lowpass.type = 'lowpass';
   lowpass.frequency.value = ringFreq * 1.8;
   lowpass.Q.value = 0.5;
 
-  // The fundamental (peak 1) and harmonic (peak harmonicLevel) can add up to
-  // (1 + harmonicLevel) at a given instant; keep the envelope's peak below
-  // that combined headroom (with a bit of extra margin for the lowpass
-  // filter's transient overshoot at the ringdown frequency jump) so this
-  // voice never exceeds unity on its own.
-  const peakEnvelope = 0.9 / (1 + harmonicLevel);
+  // Leaves a bit of headroom below unity for the lowpass filter's transient
+  // overshoot at the ringdown frequency jump.
+  const peakEnvelope = 0.9;
 
   const envelope = context.createGain();
   const scaledAmp = curves.amp.map((v) => v * peakEnvelope);
@@ -169,21 +158,15 @@ export function playChirp(context: AudioContext, destination: AudioNode, preset:
   envelope.gain.setValueAtTime(peakEnvelope, mergerTime + RING_MARGIN);
   envelope.gain.setTargetAtTime(0.0001, mergerTime + RING_MARGIN, ringDecay);
 
-  osc.connect(lowpass);
-  harmonic.connect(harmonicGain).connect(lowpass);
-  lowpass.connect(envelope);
+  osc.connect(lowpass).connect(envelope);
   const placement = applyRandomStereoPlacement(context, envelope, destination);
 
   const stopAt = mergerTime + ringDecay * 6 + 0.1;
   osc.start(now);
-  harmonic.start(now);
   osc.stop(stopAt);
-  harmonic.stop(stopAt);
 
   osc.onended = () => {
     osc.disconnect();
-    harmonic.disconnect();
-    harmonicGain.disconnect();
     lowpass.disconnect();
     envelope.disconnect();
     placement.disconnect();

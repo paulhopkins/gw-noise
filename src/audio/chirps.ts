@@ -49,6 +49,23 @@ export const CHIRP_PRESETS: ChirpPreset[] = [
   { name: 'short-fast', duration: 1.4, freqStart: 60, freqEnd: 520, shape: 4 },
 ];
 
+// Human-readable framing for each preset, purely for the on-screen event
+// notification -- ties the preset's duration back to the physical intuition
+// noted above (longer/slower <-> lower chirp mass, shorter/faster <-> higher).
+const CHIRP_LABELS: Record<string, string> = {
+  'long-slow': 'Long inspiral',
+  'medium-slow': 'Inspiral',
+  'medium-fast': 'Quick inspiral',
+  'short-fast': 'Fast merger',
+};
+
+export function describeChirpPreset(preset: ChirpPreset): { label: string; detail: string } {
+  return {
+    label: CHIRP_LABELS[preset.name] ?? preset.name,
+    detail: `${preset.duration}s · ${Math.round(preset.freqStart)}–${Math.round(preset.freqEnd)} Hz`,
+  };
+}
+
 interface InspiralCurves {
   freq: Float32Array;
   amp: Float32Array;
@@ -173,7 +190,12 @@ export function playChirp(context: AudioContext, destination: AudioNode, preset:
   };
 }
 
-export function playRandomChirp(context: AudioContext, destination: AudioNode): void {
+export function playRandomChirp(
+  context: AudioContext,
+  destination: AudioNode,
+  onSelect?: (preset: ChirpPreset) => void,
+): void {
   const preset = CHIRP_PRESETS[Math.floor(Math.random() * CHIRP_PRESETS.length)];
+  onSelect?.(preset);
   playChirp(context, destination, preset);
 }

@@ -14,7 +14,7 @@ import { createSidePanner } from './stereo';
 
 type GlitchPlayer = (context: AudioContext, destination: AudioNode) => void;
 
-interface GlitchClass {
+export interface GlitchClass {
   name: string;
   play: GlitchPlayer;
 }
@@ -223,8 +223,14 @@ export const GLITCH_CLASSES: GlitchClass[] = [
   { name: 'Extremely Loud', play: playExtremelyLoud },
 ];
 
-export function playRandomGlitch(context: AudioContext, destination: AudioNode, side: -1 | 1): void {
+export function playRandomGlitch(
+  context: AudioContext,
+  destination: AudioNode,
+  side: -1 | 1,
+  onSelect?: (glitchClass: GlitchClass) => void,
+): void {
   const glitchClass = GLITCH_CLASSES[Math.floor(Math.random() * GLITCH_CLASSES.length)];
+  onSelect?.(glitchClass);
   const panner = createSidePanner(context, side);
   panner.connect(destination);
   glitchClass.play(context, panner);

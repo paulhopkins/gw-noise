@@ -7,6 +7,7 @@ export interface ControlCallbacks {
   onChirpRate: (rate: number) => void;
   onGlitchLevel: (level: number) => void;
   onGlitchRate: (rate: number) => void;
+  onEventLabelsToggle: (enabled: boolean) => void;
 }
 
 function bindRange(id: string, onChange: (value: number) => void): void {
@@ -14,6 +15,13 @@ function bindRange(id: string, onChange: (value: number) => void): void {
   if (!(el instanceof HTMLInputElement)) throw new Error(`Missing range input #${id}`);
   el.addEventListener('input', () => onChange(Number(el.value) / 100));
   onChange(Number(el.value) / 100);
+}
+
+function bindToggle(id: string, onChange: (enabled: boolean) => void): void {
+  const el = document.getElementById(id);
+  if (!(el instanceof HTMLInputElement)) throw new Error(`Missing checkbox #${id}`);
+  el.addEventListener('change', () => onChange(el.checked));
+  onChange(el.checked);
 }
 
 export function bindControls(callbacks: ControlCallbacks): void {
@@ -24,6 +32,7 @@ export function bindControls(callbacks: ControlCallbacks): void {
   bindRange('chirpRate', callbacks.onChirpRate);
   bindRange('glitchLevel', callbacks.onGlitchLevel);
   bindRange('glitchRate', callbacks.onGlitchRate);
+  bindToggle('eventLabels', callbacks.onEventLabelsToggle);
 
   const humRadios = document.querySelectorAll<HTMLInputElement>('input[name="humFreq"]');
   humRadios.forEach((radio) => {

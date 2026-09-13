@@ -20,12 +20,18 @@
       <div class="visualizer-wrap">
         <canvas id="visualizer" width="900" height="220" aria-hidden="true"></canvas>
         <button id="visualizerModeButton" class="mode-toggle" type="button">Spectrogram view</button>
+        <div id="eventLog" class="event-log" aria-live="polite"></div>
       </div>
 
       <button id="playButton" class="play-button" type="button" aria-pressed="false">
         <span class="play-icon" aria-hidden="true"></span>
         <span class="play-label">Listen</span>
       </button>
+
+      <p class="key-hints">
+        <kbd>Space</kbd> play/pause &nbsp;·&nbsp; <kbd>V</kbd> view &nbsp;·&nbsp;
+        <kbd>&uarr;</kbd><kbd>&darr;</kbd> volume
+      </p>
 
       <section class="mixer" aria-label="Sound layer mixer">
         <div class="control">
@@ -69,6 +75,16 @@
         <div class="control">
           <label for="glitchRate">Glitches frequency</label>
           <input id="glitchRate" type="range" min="0" max="100" value="20" />
+        </div>
+
+        <div class="control toggle-control">
+          <label class="switch-label" for="eventLabels">
+            <span>Event labels</span>
+            <span class="switch">
+              <input id="eventLabels" type="checkbox" />
+              <span class="switch-track" aria-hidden="true"></span>
+            </span>
+          </label>
         </div>
       </section>
 
